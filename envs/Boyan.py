@@ -12,7 +12,7 @@ class Boyan():
         self.states = 97
         self.state = 0
 
-    def start(self):
+    def reset(self):
         self.state = 97
         return self.state
 
@@ -38,19 +38,19 @@ class Boyan():
 
         return (reward, self.state, terminal)
     
-    def getPR(self):
+def getPR():
 
-        P = np.zeros((98, 98))
-        for i in range(97, 0):
-            P[i, i-1] = .5
-            P[i, i-2] = .5
+    P = np.zeros((98, 98))
+    for i in range(97, 0):
+        P[i, i-1] = .5
+        P[i, i-2] = .5
 
-        P[2, 1] = 1
-        P[1, 0] = 1
+    P[2, 1] = 1
+    P[1, 0] = 1
 
-        R = np.array([-3]*95  + [-2, 0, 0])
+    R = np.array([-3]*95  + [-2, 0, 0])
 
-        return P, R
+    return P, R
 
 
 def compute_rep_map(dim):
