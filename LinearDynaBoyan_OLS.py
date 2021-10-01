@@ -9,7 +9,7 @@ def policy(state):
     if state<=2:
         action = 0
     else:
-        action = np.random.choice([0,1])
+        action = np.random.choice([0,1], p=[0.5, 0.5])
     return action
 
 class LinearDyna(object):
@@ -29,16 +29,9 @@ class LinearDyna(object):
         self.F = np.zeros((self.feature_size, self.feature_size))
         self.f = np.zeros((self.feature_size))
         self.Dinv = np.zeros((self.feature_size, self.feature_size))
-        self.Dinv = 1/500*np.identity(self.feature_size)
+        self.Dinv = 100*np.identity(self.feature_size)
         self.I = np.identity(self.feature_size)
         self.buffer = []
-        
-    def boyan_reward(self, state):
-        '''
-        The true reward function for Boyan Chain.
-        '''
-        P, R = Boyan.getPR()
-        return R[state]
 
     def get_phi(self, state):
         '''
@@ -136,8 +129,8 @@ class LinearDyna(object):
             
             #Here we sample s from the support. Meaning we sample a unit vector as the state
             
-            #row = np.random.randint(self.iht_size)
-            #phi_tilde = self.I[row]
+            # row = np.random.randint(self.feature_size)
+            # phi_tilde = self.I[row]
             
             #Compute the featurized next state given a featurized state and non featurized action
             phi_tilde_ = np.dot(self.F, phi_tilde)
@@ -174,8 +167,6 @@ class LinearDyna(object):
         true_value_states = self.get_val()
         feature_encoder = Boyan.BoyanRep()
         map = feature_encoder.getmap()
-        R = 0
-        N_0 = 100.0
         loss = []
         for k in tqdm(range(1,self.K+1)):
             s = self.env.reset()
@@ -190,15 +181,15 @@ class LinearDyna(object):
                 r, s_, done = self.env.step(a)
                 self.update(s,a,r,s_,done)
                 s = s_
-            L = np.linalg.norm(true_value_states - np.dot(self.theta ,map.T))
+            L = np.linalg.norm(true_value_states - np.dot(map, self.theta)) / 10
             loss.append(L)
             print(L)
         return loss
 
 #number of episodes
-K = 100
+K = 1000
 #num of runs
-runs = 30
+runs = 1
 #the environment
 env = Boyan.Boyan()
 
@@ -206,7 +197,7 @@ feature_size= 25
 #max number of interactions with an environment before a reset, chosen according to hengshaui's work
 steps = 98
 #learning rate for theta
-alpha_l = 0.1
+alpha_l = 0.001
 #learning rate for theta tilde, should somehow scale with tau, the number of planning steps
 alpha_p = 0.05
 #number of planning steps

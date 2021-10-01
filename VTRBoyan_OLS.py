@@ -9,7 +9,7 @@ def policy(state):
     if state<=2:
         action = 0
     else:
-        action = np.random.choice([0,1])
+        action = np.random.choice([0,1], p=[0.5,0.5])
     return action
 
 class LinearDyna(object):
@@ -28,19 +28,11 @@ class LinearDyna(object):
         self.theta = np.zeros(self.feature_size)
         self.F = np.zeros((self.feature_size, self.feature_size))
         self.f = np.zeros((self.feature_size))
-        self.Dinv = np.zeros((self.feature_size, self.feature_size))
-        self.Dinv = 1/500*np.identity(self.feature_size)
+        self.Dinv = 100*np.identity(self.feature_size)
         self.I = np.identity(self.feature_size)
         self.Phi = np.zeros((self.feature_size,self.feature_size))
         self.PhiPhi_ = np.zeros((self.feature_size,self.feature_size))
         self.buffer = []
-        
-    def boyan_reward(self, state):
-        '''
-        The true reward function for Boyan Chain.
-        '''
-        P, R = Boyan.getPR()
-        return R[state]
 
     def get_phi(self, state):
         '''
@@ -203,15 +195,15 @@ class LinearDyna(object):
                 r, s_, done = self.env.step(a)
                 self.update(s,a,r,s_,done)
                 s = s_
-            L = np.linalg.norm(true_value_states - np.dot(self.theta ,map.T))
+            L = np.linalg.norm(true_value_states - np.dot(map, self.theta))/10
             loss.append(L)
             print(L)
         return loss
 
 #number of episodes
-K = 30
+K = 1000
 #num of runs
-runs = 30
+runs = 1
 #the environment
 env = Boyan.Boyan()
 
