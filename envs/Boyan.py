@@ -41,7 +41,7 @@ class Boyan():
 def getPR():
 
     P = np.zeros((98, 98))
-    for i in range(97, 0):
+    for i in reversed(range(2, 98)):
         P[i, i-1] = .5
         P[i, i-2] = .5
 
@@ -49,8 +49,9 @@ def getPR():
     P[1, 0] = 1
 
     R = np.array([-3]*95  + [-2, 0, 0])
+    rev_R = R[::-1]
 
-    return P, R
+    return P, rev_R
 
 
 def compute_rep_map(dim):
@@ -67,7 +68,8 @@ def compute_rep_map(dim):
             arr = np.vstack((arr, np.array(l)))
     k = dim*[0]
     arr = np.vstack((arr, np.array(k)))
-    return arr
+    rev = arr[::-1]
+    return rev
 
 class BoyanRep:
     def __init__(self):
