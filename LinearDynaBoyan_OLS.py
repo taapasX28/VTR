@@ -28,7 +28,6 @@ class LinearDyna(object):
         self.theta = np.zeros(self.feature_size)
         self.F = np.zeros((self.feature_size, self.feature_size))
         self.f = np.zeros((self.feature_size))
-        self.Dinv = np.zeros((self.feature_size, self.feature_size))
         self.Dinv = 100*np.identity(self.feature_size)
         self.I = np.identity(self.feature_size)
         self.buffer = []
@@ -156,7 +155,7 @@ class LinearDyna(object):
 
         P, R = Boyan.getPR()
         I = np.identity(98)
-        value_states = R @ np.linalg.inv(( I- self.gamma * P))
+        value_states = np.linalg.inv(( I- self.gamma * P)) @ R
         return value_states
 
     def run(self):
@@ -184,10 +183,13 @@ class LinearDyna(object):
             L = np.linalg.norm(true_value_states - np.dot(map, self.theta)) / 10
             loss.append(L)
             print(L)
+        print(true_value_states)
+        print(np.dot(map, self.theta))
+        print(self.theta)
         return loss
 
 #number of episodes
-K = 1000
+K = 50
 #num of runs
 runs = 1
 #the environment

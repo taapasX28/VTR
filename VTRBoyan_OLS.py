@@ -9,7 +9,7 @@ def policy(state):
     if state<=2:
         action = 0
     else:
-        action = np.random.choice([0,1], p=[0.5,0.5])
+        action = np.random.choice([0,1], p=[0.5, 0.5])
     return action
 
 class LinearDyna(object):
@@ -91,27 +91,42 @@ class LinearDyna(object):
         
         #Computes the tile coded feature for next state s_
         self.phi_ = self.get_phi(s_)
-        
+        greta = np.array([-86.52663432, -92.06376873, -89.42565055, -88.91331385, -86.2070589,
+ -86.79766628, -85.49388619, -84.49748389, -83.38869387, -82.46084288,
+ -81.79682059, -79.50498146, -77.79479827, -74.91885899, -71.87759918,
+ -66.49251619, -60.11365678, -52.85777312, -46.84859679, -38.87917346,
+ -31.44833441, -23.93162344, -15.95449148,  -7.87362649,  -0.15295188,])
+        greta_ = np.array([-1.89554198e+02, -1.82054676e+02, -1.74122829e+02, -1.66520498e+02,
+ -1.58503364e+02, -1.50781762e+02, -1.42972811e+02, -1.35026581e+02,
+ -1.27113378e+02, -1.19120823e+02, -1.11280297e+02, -1.03349125e+02,
+ -9.52428549e+01, -8.74638999e+01, -7.96686363e+01, -7.17210627e+01,
+ -6.36618044e+01, -5.57414195e+01, -4.77501309e+01, -3.98354706e+01,
+ -3.17831145e+01, -2.37882042e+01, -1.59034506e+01, -7.87607101e+00,
+ -2.58898382e-02])
         #Updates our theta values using gradient descent
         self.theta = self.theta + self.alpha_l*(r + self.gamma * np.inner(self.phi_,self.theta) \
-                                             - np.inner(self.phi,self.theta))*self.phi
+                                                - np.inner(self.phi,self.theta))*self.phi
         self.Dinv = self.Sherman_Morrison(self.phi,self.Dinv)
         self.x = np.dot(self.Dinv, self.phi)
+
         self.Phi = self.Phi + np.outer(self.phi,self.phi)
+        
+
         self.PhiPhi_ = self.PhiPhi_ + np.outer(self.phi,self.phi_)
-        theta_outer = np.outer(self.theta,self.theta)
-        I = np.identity(self.feature_size)
-        temp = theta_outer + 0.999*I
-        theta_inv = np.linalg.inv(temp)
-        first = np.matmul(np.linalg.inv(self.Phi + 0.999*I),self.PhiPhi_)
-        second = np.matmul(first,theta_outer)
-        final = np.matmul(second,theta_inv)
-        self.F = final 
+        if(np.linalg.det(self.Phi)!=0.0):
+            theta_outer = np.outer(greta, greta)
+            I = np.identity(self.feature_size)
+            theta_inv = np.linalg.inv(theta_outer+0.0001 * I)
+            phi_inv = np.linalg.inv(self.Phi)
+            first = np.matmul(phi_inv, self.PhiPhi_)
+            second = np.matmul(first,theta_outer)
+            final = np.matmul(second,theta_inv)
+            self.F = final 
         # self.f[a] = self.f[a] + self.B * (r - np.inner(self.f[a],self.phi)) * self.phi
-        # self.update_F()
-        self.update_f(r)
+        #self.update_F()
+            self.update_f(r)
         #Runs our planning step.
-        self.plan()
+            self.plan()
     
     def plan(self):
         '''
@@ -141,8 +156,8 @@ class LinearDyna(object):
             
             #Here we sample s from the support. Meaning we sample a unit vector as the state
             
-            #row = np.random.randint(self.iht_size)
-            #phi_tilde = self.I[row]
+            # row = np.random.randint(self.feature_size)
+            # phi_tilde = self.I[row]
             
             #Compute the featurized next state given a featurized state and non featurized action
             phi_tilde_ = np.dot(self.F, phi_tilde)
@@ -168,7 +183,7 @@ class LinearDyna(object):
 
         P, R = Boyan.getPR()
         I = np.identity(98)
-        value_states = R @ np.linalg.inv(( I- self.gamma * P))
+        value_states = np.linalg.inv(( I- self.gamma * P)) @ R
         return value_states
 
     def run(self):
@@ -179,8 +194,6 @@ class LinearDyna(object):
         true_value_states = self.get_val()
         feature_encoder = Boyan.BoyanRep()
         map = feature_encoder.getmap()
-        R = 0
-        N_0 = 100.0
         loss = []
         for k in tqdm(range(1,self.K+1)):
             s = self.env.reset()
@@ -195,13 +208,14 @@ class LinearDyna(object):
                 r, s_, done = self.env.step(a)
                 self.update(s,a,r,s_,done)
                 s = s_
-            L = np.linalg.norm(true_value_states - np.dot(map, self.theta))/10
+            L = np.linalg.norm(true_value_states - np.dot(map, self.theta)) / 10
             loss.append(L)
             print(L)
         return loss
 
 #number of episodes
 K = 1000
+
 #num of runs
 runs = 1
 #the environment
