@@ -34,7 +34,7 @@ class LinearDyna(object):
         self.PhiPhi_ = np.zeros((self.feature_size,self.feature_size))
         self.buffer = []
         self.model_loss = []
-        self.P_dyna = np.load('dyna_model.npy')
+        #self.P_dyna = np.load('dyna_model.npy')
 
     def get_phi(self, state):
         '''
@@ -93,18 +93,7 @@ class LinearDyna(object):
         
         #Computes the tile coded feature for next state s_
         self.phi_ = self.get_phi(s_)
-        greta = np.array([-86.52663432, -92.06376873, -89.42565055, -88.91331385, -86.2070589,
- -86.79766628, -85.49388619, -84.49748389, -83.38869387, -82.46084288,
- -81.79682059, -79.50498146, -77.79479827, -74.91885899, -71.87759918,
- -66.49251619, -60.11365678, -52.85777312, -46.84859679, -38.87917346,
- -31.44833441, -23.93162344, -15.95449148,  -7.87362649,  -0.15295188,])
-        greta_ = np.array([-1.89554198e+02, -1.82054676e+02, -1.74122829e+02, -1.66520498e+02,
- -1.58503364e+02, -1.50781762e+02, -1.42972811e+02, -1.35026581e+02,
- -1.27113378e+02, -1.19120823e+02, -1.11280297e+02, -1.03349125e+02,
- -9.52428549e+01, -8.74638999e+01, -7.96686363e+01, -7.17210627e+01,
- -6.36618044e+01, -5.57414195e+01, -4.77501309e+01, -3.98354706e+01,
- -3.17831145e+01, -2.37882042e+01, -1.59034506e+01, -7.87607101e+00,
- -2.58898382e-02])
+ 
         #Updates our theta values using gradient descent
         self.theta = self.theta + self.alpha_l*(r + self.gamma * np.inner(self.phi_,self.theta) \
                                                 - np.inner(self.phi,self.theta))*self.phi
@@ -124,7 +113,7 @@ class LinearDyna(object):
             second = np.matmul(first,theta_outer)
             final = np.matmul(second,theta_inv)
             self.F = final 
-            self.model_loss.append(np.linalg.norm(self.P_dyna - self.F))
+            #self.model_loss.append(np.linalg.norm(self.P_dyna - self.F))
             self.update_f(r)
         #Runs our planning step.
             self.plan()
@@ -212,8 +201,9 @@ class LinearDyna(object):
             L = np.linalg.norm(true_value_states - np.dot(map, self.theta)) / 10
             loss.append(L)
             print(L)
-        x = np.array(self.model_loss)
-        np.save('model_loss', x)
+        #np.save('vtr_model', self.F)
+        #x = np.array(self.model_loss)
+        #np.save('model_loss', x)
         return loss
 
 #number of episodes
