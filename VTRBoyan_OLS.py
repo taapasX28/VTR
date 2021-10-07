@@ -33,6 +33,8 @@ class LinearDyna(object):
         self.Phi = np.zeros((self.feature_size,self.feature_size))
         self.PhiPhi_ = np.zeros((self.feature_size,self.feature_size))
         self.buffer = []
+        self.model_loss = []
+        self.P_dyna = np.load('dyna_model.npy')
 
     def get_phi(self, state):
         '''
@@ -114,16 +116,15 @@ class LinearDyna(object):
 
         self.PhiPhi_ = self.PhiPhi_ + np.outer(self.phi,self.phi_)
         if(np.linalg.det(self.Phi)!=0.0):
-            theta_outer = np.outer(greta, greta)
+            theta_outer = np.outer(self.theta, self.theta)
             I = np.identity(self.feature_size)
-            theta_inv = np.linalg.inv(theta_outer+0.0001 * I)
+            theta_inv = np.linalg.inv(theta_outer + 0.001*I)
             phi_inv = np.linalg.inv(self.Phi)
             first = np.matmul(phi_inv, self.PhiPhi_)
             second = np.matmul(first,theta_outer)
             final = np.matmul(second,theta_inv)
             self.F = final 
-        # self.f[a] = self.f[a] + self.B * (r - np.inner(self.f[a],self.phi)) * self.phi
-        #self.update_F()
+            self.model_loss.append(np.linalg.norm(self.P_dyna - self.F))
             self.update_f(r)
         #Runs our planning step.
             self.plan()
@@ -164,8 +165,8 @@ class LinearDyna(object):
             #compute the reward given a featurized state and a non featurized action
             r_tilde = np.inner(phi_tilde, self.f)
             #Update theta using the simulated experience 
-            theta_tilde = theta_tilde + self.alpha_p * (r_tilde + self.gamma * np.inner(theta_tilde, phi_tilde_) \
-                                                     - np.inner(theta_tilde,phi_tilde))*phi_tilde
+            theta_tilde += self.alpha_p * (r_tilde + self.gamma * np.inner(theta_tilde, phi_tilde_) \
+                                                      - np.inner(theta_tilde,phi_tilde))*phi_tilde
         #Update the current estimate of theta to be the estimate from the simulation
         self.theta = theta_tilde
      
@@ -211,10 +212,12 @@ class LinearDyna(object):
             L = np.linalg.norm(true_value_states - np.dot(map, self.theta)) / 10
             loss.append(L)
             print(L)
+        x = np.array(self.model_loss)
+        np.save('model_loss', x)
         return loss
 
 #number of episodes
-K = 1000
+K = 500
 
 #num of runs
 runs = 1
@@ -225,9 +228,9 @@ feature_size= 25
 #max number of interactions with an environment before a reset, chosen according to hengshaui's work
 steps = 98
 #learning rate for theta
-alpha_l = 0.001
+alpha_l = 0.25
 #learning rate for theta tilde, should somehow scale with tau, the number of planning steps
-alpha_p = 0.05
+alpha_p = 0.001
 #number of planning steps
 tau = 5
 #The discounting factor, chosen according to hengshaui's work
@@ -242,6 +245,7 @@ for i in tqdm(range(runs)):
 
 #averages the result for each episode by the steps per run.
 results = np.mean(loss, axis=0)
+np.save('results_VTR_500', results)
 plt.plot(results)
 plt.xlabel("Number of Episodes")
 plt.ylabel("RMSE(Between analytical and predicted vals)")

@@ -183,15 +183,13 @@ class LinearDyna(object):
             L = np.linalg.norm(true_value_states - np.dot(map, self.theta)) / 10
             loss.append(L)
             print(L)
-        print(true_value_states)
-        print(np.dot(map, self.theta))
-        print(self.theta)
+        np.save('dyna_model', self.F)
         return loss
 
 #number of episodes
-K = 50
+K = 500
 #num of runs
-runs = 1
+runs = 30
 #the environment
 env = Boyan.Boyan()
 
@@ -199,9 +197,9 @@ feature_size= 25
 #max number of interactions with an environment before a reset, chosen according to hengshaui's work
 steps = 98
 #learning rate for theta
-alpha_l = 0.001
+alpha_l = 0.25
 #learning rate for theta tilde, should somehow scale with tau, the number of planning steps
-alpha_p = 0.05
+alpha_p = 0.001
 #number of planning steps
 tau = 5
 #The discounting factor, chosen according to hengshaui's work
@@ -214,8 +212,10 @@ for i in tqdm(range(runs)):
     agent = LinearDyna(env,K, steps, alpha_l, alpha_p, tau, gamma, feature_size, B)
     loss[i,:] = agent.run()
 
+
 #averages the result for each episode by the steps per run.
 results = np.mean(loss, axis=0)
+np.save('results_dyna_500', results)
 plt.plot(results)
 plt.xlabel("Number of Episodes")
 plt.ylabel("RMSE(Between analytical and predicted vals)")
