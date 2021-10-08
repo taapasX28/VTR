@@ -286,3 +286,4 @@ for i in tqdm(range(runs)):
     step[i,:] = agent.run()
 #averages the result for each episode by the steps per run.
 results = np.mean(step,axis=0)
+np.save('VTR_mc', results)
